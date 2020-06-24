@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent.*
 import android.os.Bundle
 import android.view.KeyEvent
+import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -26,22 +27,32 @@ class MainActivity : AppCompatActivity() {
         val webViewClient = object : WebViewClient() {
 
             override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-                return try {
-                    val intent = parseUri(url, URI_INTENT_SCHEME)
-                    startActivity(intent)
-                    true
-                } catch (ex: android.content.ActivityNotFoundException) {
-                    webview.stopLoading()
-                    webview.goBack()
-                    Toast.makeText(
-                        context,
-                        "Ошибка! Не удалось открыть приложение",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                    false
+                if (url.startsWith(URL)) {
+                    return false
                 }
+                    return try {
+                        val intent = parseUri(url, URI_INTENT_SCHEME)
+                        startActivity(intent)
+                        true
+                    } catch (ex: android.content.ActivityNotFoundException) {
+                        webview.stopLoading()
+                        webview.goBack()
+                        Toast.makeText(
+                            context,
+                            "Ошибка! Не удалось открыть приложение",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                        false
+                    }
+
             }
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+        } else {
+            CookieManager.getInstance().setAcceptCookie(true);
         }
         webView.webViewClient = webViewClient
         val webSettings = webView.settings
